@@ -1,2 +1,4 @@
 # mq
-using MQ brokers
+Studing MQ brokers
+
+RabbitMQ
