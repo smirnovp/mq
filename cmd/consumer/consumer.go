@@ -24,31 +24,44 @@ func main() {
 	quitOnFailure(err, "Failure get channel")
 	defer ch.Close()
 
-	q, err := ch.QueueDeclare(
-		"mySecondQueue",
-		true,
-		false,
-		false,
-		false,
-		nil,
+	err = ch.ExchangeDeclare(
+		"myFirstExchange", //name,
+		"fanout",          // kind
+		true,              // durable
+		false,             //autoDelete
+		false,             //internal
+		false,             //noWait
+		nil,               //args
 	)
-	quitOnFailure(err, "Failure to declare queue")
+	quitOnFailure(err, "Failure to declare an Exchange")
 
-	err = ch.Qos(
-		1,
-		0,
-		false,
+	q, err := ch.QueueDeclare(
+		"",    //name
+		false, //durable
+		false, //autoDelete
+		true,  //exclusive
+		false, //noWait
+		nil,   //args
+	)
+	quitOnFailure(err, "Failure to declare a Queue")
+
+	err = ch.QueueBind(
+		q.Name,            //name
+		"",                //key
+		"myFirstExchange", //exchange
+		false,             //noWait
+		nil,               //args
 	)
 	quitOnFailure(err, "Failure to set Qos")
 
 	msgs, err := ch.Consume(
-		q.Name,
-		"",
-		false,
-		false,
-		false,
-		false,
-		nil,
+		q.Name, //queue
+		"",     //consumer
+		false,  //autoAck
+		false,  //exclusive
+		false,  //nolocal
+		false,  //noWait
+		nil,    //args
 	)
 	quitOnFailure(err, "Failure to get msgs channel")
 

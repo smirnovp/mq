@@ -44,28 +44,30 @@ func main() {
 	quitOnFailure(err, "Ошибка Channel")
 	defer ch.Close()
 
-	q, err := ch.QueueDeclare(
-		"mySecondQueue",
-		true,  //durable,
-		false, //autoDelete,
-		false, //exclusive,
-		false, //noWait,
-		nil,   //args,
+	err = ch.ExchangeDeclare(
+		"myFirstExchange", //name
+		"fanout",          //kind
+		true,              //durable
+		false,             //autoDelete
+		false,             //internal
+		false,             //noWait
+		nil,               //args
+
 	)
-	quitOnFailure(err, "Faild to declare a queue")
+	quitOnFailure(err, "Faild to declare an Exchange")
 
 	for task := range taskc {
 		body := []byte(task)
 
 		err = ch.Publish(
-			"",
-			q.Name,
-			false,
-			false,
+			"myFirstExchange", //exchange
+			"",                //key
+			false,             //mandatory
+			false,             //immediate
 			amqp.Publishing{
-				DeliveryMode: amqp.Persistent,
-				Body:         body,
-				ContentType:  "plain/text",
+				//DeliveryMode: amqp.Persistent,
+				Body:        body,
+				ContentType: "plain/text",
 			},
 		)
 		quitOnFailure(err, "Faild to publishing")
