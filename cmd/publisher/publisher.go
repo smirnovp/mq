@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"unicode/utf8"
 
 	"github.com/streadway/amqp"
 )
@@ -45,13 +46,13 @@ func main() {
 	defer ch.Close()
 
 	err = ch.ExchangeDeclare(
-		"myFirstExchange", //name
-		"fanout",          //kind
-		true,              //durable
-		false,             //autoDelete
-		false,             //internal
-		false,             //noWait
-		nil,               //args
+		"mySecondExchange", //name
+		"direct",           //kind
+		true,               //durable
+		false,              //autoDelete
+		false,              //internal
+		false,              //noWait
+		nil,                //args
 
 	)
 	quitOnFailure(err, "Faild to declare an Exchange")
@@ -59,11 +60,16 @@ func main() {
 	for task := range taskc {
 		body := []byte(task)
 
+		key, i := utf8.DecodeRune(body)
+		if i == 0 {
+			key = 'a'
+		}
+
 		err = ch.Publish(
-			"myFirstExchange", //exchange
-			"",                //key
-			false,             //mandatory
-			false,             //immediate
+			"mySecondExchange", //exchange
+			string(key),        //key
+			false,              //mandatory
+			false,              //immediate
 			amqp.Publishing{
 				//DeliveryMode: amqp.Persistent,
 				Body:        body,

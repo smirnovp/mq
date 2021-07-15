@@ -3,7 +3,8 @@ package main
 import (
 	"fmt"
 	"log"
-	"time"
+	"os"
+	"path/filepath"
 
 	"github.com/streadway/amqp"
 )
@@ -25,13 +26,13 @@ func main() {
 	defer ch.Close()
 
 	err = ch.ExchangeDeclare(
-		"myFirstExchange", //name,
-		"fanout",          // kind
-		true,              // durable
-		false,             //autoDelete
-		false,             //internal
-		false,             //noWait
-		nil,               //args
+		"mySecondExchange", //name,
+		"direct",           // kind
+		true,               // durable
+		false,              //autoDelete
+		false,              //internal
+		false,              //noWait
+		nil,                //args
 	)
 	quitOnFailure(err, "Failure to declare an Exchange")
 
@@ -45,14 +46,21 @@ func main() {
 	)
 	quitOnFailure(err, "Failure to declare a Queue")
 
-	err = ch.QueueBind(
-		q.Name,            //name
-		"",                //key
-		"myFirstExchange", //exchange
-		false,             //noWait
-		nil,               //args
-	)
-	quitOnFailure(err, "Failure to set Qos")
+	if len(os.Args) < 2 {
+		log.Fatalf("Usage: %s [a] [b] [c] [d]\n", filepath.Base(os.Args[0]))
+	}
+	keys := os.Args[1:]
+
+	for _, key := range keys {
+		err = ch.QueueBind(
+			q.Name,             //name
+			key,                //key
+			"mySecondExchange", //exchange
+			false,              //noWait
+			nil,                //args
+		)
+		quitOnFailure(err, "Failure to set Qos")
+	}
 
 	msgs, err := ch.Consume(
 		q.Name, //queue
@@ -69,9 +77,10 @@ func main() {
 		for msg := range msgs {
 			b := msg.Body
 			l := len(b)
-			t := time.Duration(l)
-			fmt.Println(string(b), ":", l, "sec.")
-			time.Sleep(t * time.Second)
+			//t := time.Duration(l)
+			//fmt.Println(string(b), ":", l, "sec.")
+			fmt.Println(string(b), "len=", l)
+			//time.Sleep(t * time.Second)
 			err := msg.Ack(false)
 			if err != nil {
 				log.Fatalln(err)
