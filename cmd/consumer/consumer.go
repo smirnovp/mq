@@ -26,13 +26,13 @@ func main() {
 	defer ch.Close()
 
 	err = ch.ExchangeDeclare(
-		"mySecondExchange", //name,
-		"direct",           // kind
-		true,               // durable
-		false,              //autoDelete
-		false,              //internal
-		false,              //noWait
-		nil,                //args
+		"myThirdExchange", //name,
+		"topic",           // kind
+		true,              // durable
+		false,             //autoDelete
+		false,             //internal
+		false,             //noWait
+		nil,               //args
 	)
 	quitOnFailure(err, "Failure to declare an Exchange")
 
@@ -47,17 +47,17 @@ func main() {
 	quitOnFailure(err, "Failure to declare a Queue")
 
 	if len(os.Args) < 2 {
-		log.Fatalf("Usage: %s [a] [b] [c] [d]\n", filepath.Base(os.Args[0]))
+		log.Fatalf("Usage: %s aaa.bbb.ccc ...\n", filepath.Base(os.Args[0]))
 	}
 	keys := os.Args[1:]
 
 	for _, key := range keys {
 		err = ch.QueueBind(
-			q.Name,             //name
-			key,                //key
-			"mySecondExchange", //exchange
-			false,              //noWait
-			nil,                //args
+			q.Name,            //name
+			key,               //key
+			"myThirdExchange", //exchange
+			false,             //noWait
+			nil,               //args
 		)
 		quitOnFailure(err, "Failure to set Qos")
 	}
